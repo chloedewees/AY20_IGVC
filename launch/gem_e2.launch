@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~  XBox Controller  ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <node pkg="joy" type="joy_node" name="joy">
+      <param name="coalesce_interval" type="double" value="0.02"/>
+      <param name="default_trig_val" value="true"/>
+      <param name="deadzone" value="0.0"/>
+  </node>
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~  Main High Level System Nodes  ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <node name="vehicle_manager_hl" pkg="AY20_IGVC" type="vehicle_manager_hl.py" output="screen" required="True" />
+  <node name="self_kill_node" pkg="AY20_IGVC" type="self_kill.py" output="screen" required="True" />
+  <node name="EStop_publisher" pkg="rosserial_python" type="serial_node.py" >
+    <param name="port" value="/dev/ttyACM0" />
+  </node>
+  <node name="user_input_node" pkg="AY20_IGVC" type="user_input_node.py" output="screen" />
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~  PACMOD (Taken from Autonomous Stuff launch files) ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <arg name="launch_pacmod" default="true" />
+  <arg name="use_socketcan" default="false" />
+  <!-- PACMod Board Revision -->
+  <arg name="is_pacmod_3" default="false" />
+  <!-- You do not need to set the pacmod_board_rev
+       argument below. It will be set automatically
+       based on the value of is_pacmod_x. -->
+  <arg name="pacmod_board_rev" value="2" unless="$(arg is_pacmod_3)" />
+  <arg name="pacmod_board_rev" value="3" if="$(arg is_pacmod_3)" />
+  <arg name="pacmod_can_hardware_id" default="10812" />
+  <arg name="pacmod_can_circuit_id" default="0" />
+  <arg name="pacmod_socketcan_device" default="can0" />
+  <!-- PACMod Vehicle Types are:
+       POLARIS_GEM (also covers eLXD)
+       POLARIS_RANGER
+       LEXUS_RX_450H
+       INTERNATIONAL_PROSTAR_122
+       VEHICLE_4
+       VEHICLE_5
+       VEHICLE_6
+       FREIGHTLINER_CASCADIA
+       JUPITER_SPIRIT -->
+  <arg name="pacmod_vehicle_type" default="POLARIS_GEM" />  
+  <group unless="$(arg is_pacmod_3)">
+    <include file="$(find pacmod)/launch/pacmod.launch" if="$(arg launch_pacmod)" ns="pacmod">
+      <arg name="pacmod_vehicle_type" value="$(arg pacmod_vehicle_type)" />
+      <arg name="use_kvaser" value="true" unless="$(arg use_socketcan)" />
+      <arg name="kvaser_hardware_id" value="$(arg pacmod_can_hardware_id)" unless="$(arg use_socketcan)" />
+      <arg name="kvaser_circuit_id" value="$(arg pacmod_can_circuit_id)" unless="$(arg use_socketcan)" />
+      <arg name="use_socketcan" value="true" if="$(arg use_socketcan)" />
+      <arg name="socketcan_device" value="$(arg pacmod_socketcan_device)" if="$(arg use_socketcan)" />
+    </include>
+  </group>
+  <group if="$(arg is_pacmod_3)">
+    <include file="$(find pacmod3)/launch/pacmod3.launch" if="$(arg launch_pacmod)" ns="pacmod">
+      <arg name="pacmod_vehicle_type" value="$(arg pacmod_vehicle_type)" />
+      <arg name="use_kvaser" value="true" unless="$(arg use_socketcan)" />
+      <arg name="kvaser_hardware_id" value="$(arg pacmod_can_hardware_id)" unless="$(arg use_socketcan)" />
+      <arg name="kvaser_circuit_id" value="$(arg pacmod_can_circuit_id)" unless="$(arg use_socketcan)" />
+      <arg name="use_socketcan" value="true" if="$(arg use_socketcan)" />
+      <arg name="socketcan_device" value="$(arg pacmod_socketcan_device)" if="$(arg use_socketcan)" />
+    </include>
+  </group>
+  
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~  Cameras  ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <include file="$(find AY20_IGVC)/launch/fm_camera.launch" />
+  <include file="$(find AY20_IGVC)/launch/fl_camera.launch" />
+  <include file="$(find AY20_IGVC)/launch/fr_camera.launch" />
+  
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~  TELEOP  ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <include file="$(find AY20_IGVC)/launch/teleop.launch">
+    <arg name="controller_type" value="XBOX_ONE" />
+    <arg name="pacmod_board_rev" value="$(arg pacmod_board_rev)" />
+    <arg name="pacmod_vehicle_type" value="$(arg pacmod_vehicle_type)" />
+  </include>
+  
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~  SELF DRIVE  ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <include file="$(find AY20_IGVC)/launch/selfdrive.launch" />
+  
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~  DATA LOGGING  ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  
+</launch>

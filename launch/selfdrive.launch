@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~  Self-drive Manager  ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <node name="selfdrive_manager" pkg="AY20_IGVC" type="selfdrive_node.py" output="screen" />
+  
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~  Velocity Control  ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <node name="speed_controller" pkg="AY20_IGVC" type="constVelocity.py" output="screen" />
+  <!-- <node name="sign_controller" pkg="AY20_IGVC" type="signController.py" output="screen" /> -->
+  <node name="whiteline_detector" pkg="AY20_IGVC" type="whiteline_detector.py" output="screen" />
+  <!-- <node name="line_controller" pkg="AY20_IGVC" type="whiteLineController.py" output="screen" /> -->
+  
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~  Object Recognition System  ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <node name="cnn" pkg="AY20_IGVC" type="darknet.py" />  
+  
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~  Lane Following  ~~~~~~~~~~~~~~~~~~~~~~~~ -->  
+  <node name="RightLaneDetector" pkg="AY20_IGVC" type="rightLaneDetector.py" />
+  <node name="steeringController" pkg="AY20_IGVC" type="steeringController.py" output="screen"
+  
+</launch>

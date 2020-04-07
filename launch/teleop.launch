@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="pacmod_board_rev" default="2" />
+
+  <arg name="pacmod_vehicle_type" default="POLARIS_GEM" />
+
+  <arg name="steering_stick" default="LEFT"/>
+
+  <!-- Supported types are:
+       LOGITECH_F310 (the standard gamepad provided with all vehicles)
+       HRI_SAFE_REMOTE
+       LOGITECH_G29 (steering wheel and pedals)
+       NINTENDO_SWITCH_WIRED_PLUS
+       XBOX_ONE -->
+  <arg name="controller_type" default="XBOX_ONE"/>
+        
+  <!-- 4.71239 is fast but jerky. Speed in rad/sec.-->
+  <arg name="steering_max_speed" default="3.3"/>
+
+  <!-- Scales raw joystick input -->
+  <arg name="accel_scale_val" default="1.0"/>
+
+  <!-- Scales raw joystick input -->
+  <arg name="brake_scale_val" default="1.0"/>
+
+  <!-- For GEM, 11.176m/s -->
+  <arg name="max_veh_speed" default="11.176" />
+  <group ns="teleop">
+    <node pkg="AY20_IGVC" type="teleop" name="teleop">
+      <param name="pacmod_board_rev" value="$(arg pacmod_board_rev)"/>
+      <param name="pacmod_vehicle_type" value="$(arg pacmod_vehicle_type)"/>
+      <param name="steering_stick" value="$(arg steering_stick)"/>
+      <param name="controller_type" value="$(arg controller_type)"/>            
+      <param name="steering_max_speed" value="$(arg steering_max_speed)"/>
+      <param name="accel_scale_val" value="$(arg accel_scale_val)"/>
+      <param name="brake_scale_val" value="$(arg brake_scale_val)"/>
+      <param name="max_veh_speed" value="$(arg max_veh_speed)" />
+    </node>
+  </group>
+</launch>
+  
