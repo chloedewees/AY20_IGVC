@@ -1,0 +1,50 @@
+<launch>
+
+    <arg name="bag_file1" default="/home/user1/Data/ssd/ay2019/gem_nav_odom_2019-06-21-11-26-44/gem_e2_2019-06-21-11-26-44.bag"/>
+    <arg name="bag_file2" default="/home/user1/Data/gem_nav_odom_2019-06-21-11-45-34/gem_nav_odom_2019-06-21-11-45-34.bag"/>
+    <arg name="bag_file3" default="/home/user1/Data/gem_nav_odom_2019-06-21-11-26-44/gem_e2_2019-06-21-11-26-44.bag"/>
+    <arg name="bag_file3o" default="/home/user1/Data/AckermanAnalysis/output.bag"/>
+    <arg name="pcap_file1" default="/home/user1/Data/ssd/ay2019/pcaps/vlp64_2019_06_21_11_26.pcap"/>
+    <arg name="pcap_file2" default="/home/user1/Data/pcaps/vlp64_2019_06_21_11_45.pcap"/>
+    <arg name="pcap_file3" default="/home/user1/Data/pcaps/vlp64_2019_06_21_11_26.pcap"/> 
+
+    <param name="use_sim_time" type="bool" value="true"/>
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~ Replay the bag files ~~~~~~~~~~~~~~~~~~~~~~ -->
+    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock -r 1 $(arg bag_file3o)"/>
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~ Velodyne Lidar and laserscan ~~~~~~~~~~~~~~ 
+    <include file="$(find gem_localization)/launch/velodyne_bringup.launch">
+        <arg name="pcap" value="$(arg pcap_file3)" />
+    </include>  
+         -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~ Robot Model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <group ns="robot_model">
+    <node name="robot_state" pkg="robot_state_publisher" type="robot_state_publisher">
+        <param name="publish_frequency" value="2" />
+        <param name="future_date_fixed_transforms" value="1.0" />
+    </node>
+    <param name="robot_description" textfile="$(find gem_localization)/urdf/gem_e2.urdf" />
+  </group> 
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~ Robot Odom from Speed and Yaw  ~~~~~~~~~~~~ -->
+  <node pkg="gem_localization" type="odom_from_speedometer.py" name="odom_speed" ns="localization"/>
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~ Robot State Estimation  ~~~~~~~~~~~~ -->  
+  <rosparam command="load" file="$(find gem_localization)/params/ekf_geme2.yaml" />
+
+  <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
+  </node>
+
+  <node pkg="robot_localization" type="navsat_transform_node" name="navsat_transform" clear_params="true">
+    <rosparam command="load" file="$(find gem_localization)/params/navsat_transform_geme2.yaml" />
+    <remap from="gps/fix" to="localization/fix"/>
+    <remap from="imu/data" to="localization/imu/raw"/>
+    <remap from="odometry/filtered" to="odometry/filtered"/>
+  </node>
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~ Transforms between RTK frame terminonology to ROS frame  ~~~~~~~~~~~~ -->
+  <node pkg="tf" type="static_transform_publisher" name="odom_to_near_feild" args="0 0 0 0 0 0 odom near_field 100" />
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_veh_near_field" args="0 0 0 0 0 0 base_link veh_near_field 100" />
+
+</launch>

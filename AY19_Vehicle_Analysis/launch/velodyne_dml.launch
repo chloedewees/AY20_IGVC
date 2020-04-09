@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+  <arg name="run_drivers" default="false"/>
+
+  <arg name="tf_time_offset" default="0.0"/>
+  
+  <arg name="lidar_filter_filename" default=""/>
+  
+  <arg name="lidar_lower_filter_min_x" default="0.0"/>
+  <arg name="lidar_lower_filter_max_x" default="0.0"/>
+  <arg name="lidar_lower_filter_min_y" default="0.0"/>
+  <arg name="lidar_lower_filter_max_y" default="0.0"/>
+  <arg name="lidar_lower_filter_max_z" default="0.0"/>
+  <arg name="lidar_upper_filter_min_x" default="0.0"/>
+  <arg name="lidar_upper_filter_max_x" default="0.0"/>
+  <arg name="lidar_upper_filter_min_y" default="0.0"/>
+  <arg name="lidar_upper_filter_max_y" default="0.0"/>
+  
+  <arg name="origin_to_ground" default="1.8"/>
+  
+  <arg name="front_lidar_ip" default="192.168.1.10"/>
+  <arg name="front_lidar_model" default="HDL64E"/>
+  <arg name="front_lidar_rate" default="10.0"/>
+  <arg name="front_lidar_x" default="0.0"/>
+  <arg name="front_lidar_y" default="0.0"/>
+  <arg name="front_lidar_z" default="0.0"/>
+  <arg name="front_lidar_yaw" default="0.0"/>
+  <arg name="front_lidar_pitch" default="0.0"/>
+  <arg name="front_lidar_roll" default="0.0"/>
+  <arg name="front_lidar_min_range" default="0.1"/>
+  <arg name="front_lidar_max_range" default="150.0"/>
+
+  <arg name="use_dynamic_scan_tf" default="true"/>
+  <arg name="grass_clutter_detection" default="true"/>
+  <arg name="dust_threshold" default="0.0"/>
+  <arg name="udp_buffer_size" default="212992"/>
+
+
+    <!-- Transforms for replay of bag file
+    <node pkg="tf" type="static_transform_publisher" name="near_feild_to_veh_near_field"
+        args="0 0 0 0 0 0 near_feild veh_near_field 100" />  -->
+    <node pkg="tf" type="static_transform_publisher" name="veh_near_field_to_velodyne0"
+        args="0 0 1.75 0 0 0 near_field velodyne0 100" />
+
+
+  <group ns="lidar">
+
+    <!-- Velodyne Low Level Interface -->
+    <node pkg="velodyne_ll" name="interface" type="interface" respawn="true">
+
+
+      <param name="pcap_filename" type="string" value="/home/user1/Data/ssd/ay2019/pcaps/vlp64_2019_06_21_11_26.pcap"/>
+      <param name="pcap_loop" type="bool" value="true"/>
+
+      <!--value in bytes, default is 212992, use higher value because driver is running slower on PC,
+          or additional udp traffic -->
+      <param name="udp_buffer_size" type="int" value="$(arg udp_buffer_size)"/>
+
+      <!-- Set to true to transform individual slices as the vehicle moves.
+           Set to false to use the average vehicle transform for the entire scan. -->
+      <param name="use_dynamic_scan_tf" type="bool" value="$(arg use_dynamic_scan_tf)"/>
+
+      <!-- Don't republish tf captured in the vl_raw packets -->
+      <param name="publish_unpack_tf" value="false" unless="$(arg run_drivers)"/>
+
+      <!-- Latency (in seconds) between laser reading and vehicle transform
+           0.0 uses the most recent transform available, 0.1 is 100ms, etc. (cannot be negative) -->
+      <param name="tf_time_offset" type="double" value="$(arg tf_time_offset)"/>
+      
+      <!-- Ring filter list file -->
+      <param name="filter_filename" type="string" value="$(arg lidar_filter_filename)"/>
+      
+      <!-- Vehicle bounding box filters (0.0 is vehicle origin)
+           At minimum, lower filter should be set to improve ground point detection -->
+      <param name="lower_filter_min_x" type="double" value="$(arg lidar_lower_filter_min_x)"/>
+      <param name="lower_filter_max_x" type="double" value="$(arg lidar_lower_filter_max_x)"/>
+      <param name="lower_filter_min_y" type="double" value="$(arg lidar_lower_filter_min_y)"/>
+      <param name="lower_filter_max_y" type="double" value="$(arg lidar_lower_filter_max_y)"/>
+      <param name="lower_filter_max_z" type="double" value="$(arg lidar_lower_filter_max_z)"/>
+      <param name="upper_filter_min_x" type="double" value="$(arg lidar_upper_filter_min_x)"/>
+      <param name="upper_filter_max_x" type="double" value="$(arg lidar_upper_filter_max_x)"/>
+      <param name="upper_filter_min_y" type="double" value="$(arg lidar_upper_filter_min_y)"/>
+      <param name="upper_filter_max_y" type="double" value="$(arg lidar_upper_filter_max_y)"/>
+  
+      <!-- Points below this intensity value are ignored (1.0 is full intensity) -->
+      <param name="dust_threshold" type="double" value="$(arg dust_threshold)"/>
+
+      <!-- Distance from vehicle origin to the actual ground in the z direction
+           use positive values if the origin is above the ground
+           use negative values if the origin is below the ground -->      
+      <param name="origin_to_ground" type="double" value="$(arg origin_to_ground)"/>
+      
+      <!-- Notes:
+           * rate is expected spin rate (in hz), does not need to be exact
+           * x/y/z is translation from vehicle origin, in meters
+           * yaw/pitch/roll is rotation from vehicle origin, in degrees
+           * min/max range is in meters from sensor, points outside will be ignored -->
+      
+      <!-- Front velodyne -->
+      <param name="v0_ip" type="string" value="$(arg front_lidar_ip)"/>
+      <param name="v0_model" type="string" value="$(arg front_lidar_model)"/>
+      <param name="v0_rate" type="double" value="$(arg front_lidar_rate)"/>
+      <param name="v0_x" type="double" value="$(arg front_lidar_x)"/>
+      <param name="v0_y" type="double" value="$(arg front_lidar_y)"/>
+      <param name="v0_z" type="double" value="$(arg front_lidar_z)"/>
+      <param name="v0_yaw" type="double" value="$(arg front_lidar_yaw)"/>
+      <param name="v0_pitch" type="double" value="$(arg front_lidar_pitch)"/>
+      <param name="v0_roll" type="double" value="$(arg front_lidar_roll)"/>
+      <param name="v0_min_range" type="double" value="$(arg front_lidar_min_range)"/>
+      <param name="v0_max_range" type="double" value="$(arg front_lidar_max_range)"/>
+    </node>
+
+
+    <!-- Velodyne High Level Processor -->
+    <node pkg="velodyne_hl" name="process" type="process" respawn="true">
+
+      <!-- TWM costmap grid cell resolution and size in meters -->
+      <param name="twm_costmap_res" type="double" value="0.30"/>
+      <param name="twm_costmap_range" type="double" value="50.0"/>
+
+      <!-- Minimum number of points that must be within range for a valid sensor reading -->
+      <param name="heartbeat_point_threshold" type="int" value="10000"/>
+      <!-- Only points inside this range will count towards the heartbeat point count -->
+      <param name="heartbeat_range_min" type="double" value="1.0"/>
+      <param name="heartbeat_range_max" type="double" value="50.0"/>
+
+      <!-- Set to true to enable dynamic map resizing to maintain output rate -->
+      <param name="dynamic_map" type="bool" value="true"/>
+      <!-- Target processing load if dynamic_map is true (0.9 = 90%, +/- 5%) -->
+      <param name="target_load" type="double" value="0.90"/>
+      <!-- Number of frames to average to calculate processing load -->
+      <param name="load_sample_size" type="int" value="5"/>
+
+      <!-- Starting/max map grid cell resolution and size in meters -->
+      <param name="map_res" type="double" value="0.15"/>
+      <param name="map_range" type="double" value="70.0"/>
+      <!-- Minimum map grid cell resoltuion and size in meters (only used if dynamic_map = true) -->
+      <param name="map_res_min" type="double" value="0.30"/>
+      <param name="map_range_min" type="double" value="40.0"/>
+
+      <!-- Starting/max ground map grid cell resolution and size in meters -->
+      <param name="ground_map_res" type="double" value="0.5"/>
+      <param name="ground_map_range" type="double" value="70.0"/>
+      <!-- Minimum ground map grid cell resoltuion and size in meters (only used if dynamic_map = true) -->
+      <param name="ground_map_res_min" type="double" value="2.0"/>
+      <param name="ground_map_range_min" type="double" value="40.0"/>
+      <!-- Number of closest ground points to search KD tree for when filling ground map (more points = smoother map, but slower) -->
+      <param name="ground_map_fill_n" type="int" value="8"/>
+
+      <!-- Set to true to enable grass detection (in map) -->
+      <param name="detect_grass" type="bool" value="$(arg grass_clutter_detection)"/>
+
+      <!-- Set to true to enable clutter detection (in objects) -->
+      <param name="detect_clutter" type="bool" value="$(arg grass_clutter_detection)"/>
+
+    </node>
+
+
+    <!-- Velodyne Tracker -->
+    <node pkg="velodyne_track" name="track" type="track" respawn="true">
+    </node>
+
+
+    <!-- Velodyne Negative Obstacle Detection
+    <node pkg="velodyne_nod" type="negative" name="negative" respawn="true">
+    </node>   -->
+
+
+    <!-- Velodyne Ground Surface Classifier -->
+    <node pkg="velodyne_surf" type="surface" name="surface" respawn="true">
+    <param name="costmap_empty_cell" type="double" value="180.0"/>
+    </node>
+
+
+  </group>
+
+</launch>

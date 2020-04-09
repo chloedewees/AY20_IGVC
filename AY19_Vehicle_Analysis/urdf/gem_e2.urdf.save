@@ -1,0 +1,127 @@
+<?xml version="1.0" ?>
+<robot name="GEM" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Mechanicals -->
+  <link name="base_link"/>
+  <link name="veh_near_field"/>
+  <joint name="veh_near_field-base" type="fixed">
+    <parent link="veh_near_field"/>
+    <child link="base_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+   </joint>
+
+  <link name="footprint"/>
+  <joint name="base-footprint" type="fixed">
+    <parent link="base_link"/>
+    <child link="footprint"/>
+    <origin rpy="0 0 0" xyz="0 0 -0.278"/>
+  </joint>
+  
+  <link name="rack_link"/>
+  <joint name= "rack-base" type="fixed">
+    <parent link="base_link"/>
+    <child link="rack_link"/>
+    <origin rpy=" 0 0 0" xyz="0.400 0 1.640"/>
+  </joint>
+
+  <link name="velodyne0"/>
+  <joint name="velodyne-rack" type="fixed">
+    <parent link="rack_link"/>
+    <child link="velodyne0"/>
+    <origin rpy="0 0 0" xyz="0.235 0 0.241"/>
+  </joint>
+
+  <!-- Cost map transform -->
+  <link name="costmap"/>
+  <joint name="base_link-costmap" type="fixed">
+    <parent link="base_link"/>
+    <child link="costmap"/>
+    <origin rpy="-3.14159 0 -3.14159" xyz="12.5 0 0"/>
+  </joint>
+  <!--IMU -->
+  <link name="imu"/>
+  <joint name="base-imu" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu"/>
+    <origin rpy="0 0 0" xyz="0.770 0 0.320"/>
+  </joint>
+
+  <!-- GPS -->
+  <link name="gps"/>
+  <joint name="rack-gps" type="fixed">
+    <parent link="rack_link"/>
+    <child link="gps"/>
+    <origin rpy="0 0 0" xyz="-0.35 -0.624 0.025"/>
+  </joint>
+
+  
+<!--Cameras not updated-->
+
+  <!-- Upright frame has Z up and Y forward -->
+  <link name="front_left_camera_mechanical"/>
+  <joint name="front_left_camera_mechanical_joint" type="fixed">
+    <parent link="rack_link"/>
+    <child link="front_left_camera_mechanical"/>
+    <origin rpy="0 0.0383972111111 3.14159" xyz="0.405 -0.250 0.983"/>
+  </joint>  
+  <link name="front_left_camera"/>
+  <joint name="front_left_camera_joint" type="fixed">
+    <parent link="front_left_camera_mechanical"/>
+    <child link="front_left_camera"/>
+    <origin rpy="0 0 -1.570795" xyz="0 0 0"/>
+  </joint>  
+  
+  <link name="front_right_camera_mechanical"/>
+  <joint name="front_right_camera_mechanical_joint" type="fixed">
+    <parent link="rack_link"/>
+    <child link="front_right_camera_mechanical"/>
+    <origin rpy="0.002436 -0.073474 0.008039" xyz="-0.0135933621894072 -0.459734749687401 -0.00161182732920356"/>
+  </joint>  
+  <link name="front_right_camera"/>
+  <joint name="front_right_camera_joint" type="fixed">
+    <parent link="front_right_camera_mechanical"/>
+    <child link="front_right_camera"/>
+    <origin rpy="-1.570795 0 -1.570795" xyz="0 0 0"/>
+  </joint>
+  
+  <link name="front_center_camera_mechanical"/>
+  <joint name="front_center_camera_mechanical_joint" type="fixed">
+    <parent link="rack_link"/>
+    <child link="front_center_camera_mechanical"/>
+    <origin rpy="0.002436 -0.073474 0.008039" xyz="-0.0135933621894072 -0.459734749687401 -0.00161182732920356"/>
+  </joint>  
+  <link name="front_center_camera"/>
+  <joint name="front_center_camera_joint" type="fixed">
+    <parent link="front_center_camera_mechanical"/>
+    <c link="front_center_camera"/>
+    <origin rpy="-1.570795 0 -1.570795" xyz="0 0 0"/>
+  </joint>
+  
+  <link name="rear_left_camera_mechanical"/>
+  <joint name="rear_left_camera_mechanical_joint" type="fixed">
+    <parent link="rack_link"/>
+    <child link="rear_left_camera_mechanical"/>
+    <origin rpy="0.027026 -0.037468 0.003624" xyz="0.0459773083039723 -0.623496784910761 -0.0137103825657413"/>
+  </joint>
+  <link name="rear_left_camera"/>
+  <joint name="rear_left_camera_joint" type="fixed">
+    <parent link="rear_left_camera_mechanical"/>
+    <child link="rear_left_camera"/>
+    <origin rpy="-1.570795 0 -1.570795" xyz="0 0 0"/>
+  </joint>
+  
+  <link name="rear_right_camera_mechanical"/>
+  <joint name="rear_right_camera_mechanical_joint" type="fixed">
+    <parent link="rack_link"/>
+    <child link="rear_right_camera_mechanical"/>
+    <origin rpy="0.027026 -0.037468 0.003624" xyz="0.0459773083039723 -0.623496784910761 -0.0137103825657413"/>
+  </joint>
+  <link name="rear_right_camera"/>
+  <joint name="rear_right_camera_joint" type="fixed">
+    <parent link="rear_right_camera_mechanical"/>
+    <child link="rear_right_camera"/>
+    <origin rpy="-1.570795 0 -1.570795" xyz="0 0 0"/>
+  </joint>
+  
+
+</robot>
