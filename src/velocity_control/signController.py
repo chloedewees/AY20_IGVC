@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 
-import rospy, sys
+import rospy
 from std_msgs.msg import UInt16MultiArray, Int8
 from pacmod_msgs.msg import PacmodCmd
-
-brake_cmd = PacmodCmd()
-throttle_cmd = PacmodCmd()
-
+speed_to_go = 5.0
 state = 0
 
 VC = [2500.0, 3000.0]
@@ -19,10 +16,10 @@ deltaVS = [50.0, 100.0, 200.0]
 deltaS = [100.0, 200.0, 300.0]
 deltaF = [200.0, 300.0, 500.0]
 deltaVF = [300.0,   500.0, 1000.0]
-NOBREAK = 0.4
-QUARTERBREAK = 0.625
-HALFBREAK = 0.75
-FULLBREAK = 1.0
+NOSPEED = 0.0
+QUARTERSPEED = 1.25
+HALFSPEED = 2.5
+FULLSPEED = 5.0
 
 membership = [0.0, 0.0, 0.0, 0.0, 0.0]
 deltaMembership = [0.0, 0.0, 0.0, 0.0, 0.0]
@@ -39,14 +36,14 @@ degreeFiring = [
 ]
 
 outputTable = [
-[FULLBREAK, FULLBREAK, FULLBREAK, FULLBREAK, FULLBREAK],
-[NOBREAK, QUARTERBREAK, HALFBREAK, FULLBREAK, FULLBREAK],
-[NOBREAK, NOBREAK, QUARTERBREAK, HALFBREAK, FULLBREAK],
-[NOBREAK, NOBREAK, NOBREAK, QUARTERBREAK, HALFBREAK],
-[NOBREAK, NOBREAK, NOBREAK, NOBREAK, QUARTERBREAK]
+[NOSPEED, NOSPEED, NOSPEED, NOSPEED, NOSPEED],
+[FULLSPEED, HALFSPEED, QUARTERSPEED, NOSPEED, NOSPEED],
+[FULLSPEED, FULLSPEED, HALFSPEED, QUARTERSPEED, NOSPEED],
+[FULLSPEED, FULLSPEED, FULLSPEED, HALFSPEED, QUARTERSPEED],
+[FULLSPEED, FULLSPEED, FULLSPEED, FULLSPEED, HALFSPEED]
 ]
 
-breakOutput = 0.0
+speedOutput = 5.0
 area = 0.0
 prevArea = 0.0
 deltaArea = 2.0
@@ -67,10 +64,10 @@ def callback(data):
         area = data.data[0]
     deltaArea = abs(area - prevArea)
 
-def stopSignBreakController():
-    global breakOutput, area, brake_cmd, throttle_cmd
+def stopSignSpeedController():
+    global breakOutput, area, speed_to_go
     rospy.init_node('stopSignBreakController', anonymous=True)
-    brake_pub = rospy.Publisher('/pacmod/as_rx/brake_cmd', PacmodCmd, queue_size=10)
+    speed_pub = rospy.Publisher('\stop_speed', Int8, queue_size=10)
     throttle_pub = rospy.Publisher('pacmod/as_rx/accel_cmd', PacmodCmd, queue_size = 10)
     rospy.Subscriber('/selfdrive/state', Int8, state_callback)
     rospy.Subscriber("detection_status", UInt16MultiArray, callback)   
@@ -83,18 +80,18 @@ def stopSignBreakController():
             throttle_pub.publish(throttle_cmd)
             loop()
             #print(breakOutput)
-            brake_cmd.f64_cmd = breakOutput
-            brake_pub.publish(brake_cmd)
-        rate.sleep()
+            speed_to_go = speedOutput
+            speed_pub.publish(speed_to_go)
+            rate.sleep()
         
     
 def loop():
-    global breakOutput, membership, deltaMembership, area, deltaArea
+    global speedOutput, membership, deltaMembership, area, deltaArea
     getState()
     getMembership(area, deltaArea)
     combVectors(membership, deltaMembership)
 
-    breakOutput = defuzzification()
+    speedOutput = defuzzification()
 
 
 def fuzzificationTriangle(x, p1, p2, p3):
@@ -163,4 +160,4 @@ def defuzzification():
     return runningNumSum/runningDenSum
     
 if __name__ == '__main__':
-    stopSignBreakController()
+    stopSignSpeedController()

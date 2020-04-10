@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy, sys
-from std_msgs.msg import Int16, Int8
+from std_msgs.msg import Int16, Int8, Float32
 from pacmod_msgs.msg import PacmodCmd
 
 brake_cmd = PacmodCmd()
@@ -21,10 +21,10 @@ deltaS = [2.0, 5.0, 10.0]
 deltaF = [5.0, 10.0, 15.0]
 deltaVF = [15.0, 20.0]
 
-NOBREAK = 0.4
-QUARTERBREAK = 0.625
-HALFBREAK = 0.75
-FULLBREAK = 1.0
+NOSPEED = 0.0
+QUARTERSPEED = 1.25
+HALFSPEED = 2.5
+FULLSPEED = 5.0
 
 membership = [0.0, 0.0, 0.0, 0.0, 0.0]
 deltaMembership = [0.0, 0.0, 0.0, 0.0, 0.0]
@@ -41,14 +41,14 @@ degreeFiring = [
 ]
 
 outputTable = [
-[FULLBREAK, FULLBREAK, FULLBREAK, FULLBREAK, FULLBREAK],
-[QUARTERBREAK, HALFBREAK, FULLBREAK, FULLBREAK, FULLBREAK],
-[QUARTERBREAK, QUARTERBREAK, HALFBREAK, FULLBREAK, FULLBREAK],
-[NOBREAK, NOBREAK, QUARTERBREAK, HALFBREAK, HALFBREAK],
-[NOBREAK, NOBREAK, NOBREAK, NOBREAK, QUARTERBREAK]
+[NOSPEED, NOSPEED, NOSPEED, NOSPEED, NOSPEED],
+[HALFSPEED, QUARTERSPEED, NOSPEED, NOSPEED, NOSPEED],
+[HALFSPEED, HALFSPEED, QUARTERSPEED, NOSPEED, NOSPEED],
+[FULLSPEED, FULLSPEED, HALFSPEED, QUARTERSPEED, QUARTERSPEED],
+[FULLSPEED, FULLSPEED, FULLSPEED, FULLSPEED, HALFSPEED]
 ]
 
-breakOutput = 0.0
+speedOutput = 0.0
 yDist = 0.0
 prevYDist = 0.0
 deltaYCoord = 2.0
@@ -60,6 +60,7 @@ def state_callback(msg):
         rospy.signal_shutdown('killed by selfdrive manager')
         sys.exit()
 
+
 def callback(data):
     global yDist, prevYDist, deltaYCoord
     prevYDist = yDist
@@ -69,11 +70,11 @@ def callback(data):
         yDist = data.data
     deltaYCoord = abs(yDist - prevYDist)
 
-def whiteLineBreakController():
-    global breakOutput, yDist, brake_cmd, throttle_cmd
+def whiteLineSpeedController():
+    global speedOutput, yDist, brake_cmd, throttle_cmd
     rospy.init_node('whiteLineBreakController', anonymous=True)
     throttle_pub = rospy.Publisher('pacmod/as_rx/accel_cmd', PacmodCmd, queue_size = 10)
-    brake_pub = rospy.Publisher('/pacmod/as_rx/brake_cmd', PacmodCmd, queue_size=10)
+    speed_pub = rospy.Publisher('/speed_applied', Float32, queue_size=10)
     rospy.Subscriber('/selfdrive/state', Int8, state_callback)
     rospy.Subscriber('/line_distance', Int16, callback)   
     
@@ -84,19 +85,19 @@ def whiteLineBreakController():
             throttle_cmd.f64_cmd = 0.0
             throttle_pub.publish(throttle_cmd)
             loop()
-            print(breakOutput)
-            brake_cmd.f64_cmd = breakOutput
-            brake_pub.publish(brake_cmd)
-        rate.sleep()
+            print(speedOutput)
+            speed_cmd = speedOutput
+            speed_pub.publish(speed_cmd)
+            rate.sleep()
         
     
 def loop():
-    global breakOutput, membership, deltaMembership, yDist, deltaYCoord
+    global speedOutput, membership, deltaMembership, yDist, deltaYCoord
     getState()
     getMembership(yDist, deltaYCoord)
     combVectors(membership, deltaMembership)
     print(membership)
-    breakOutput = defuzzification()
+    speedOutput = defuzzification()
 
 
 def fuzzificationTriangle(x, p1, p2, p3):
@@ -166,4 +167,4 @@ def defuzzification():
     
 if __name__ == '__main__':
     
-    whiteLineBreakController()
+    whiteLineSpeedController()
