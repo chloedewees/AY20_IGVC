@@ -55,13 +55,13 @@ def unwarp_lane(img):
     undist = img
     undist_orig = undist.copy()
     
-    rad = 1.26
+    rad = .8
     length = 800
-    x1 = 714
+    x1 = 1440
     y1 = 1429
     x2 = x1-int(length*math.cos(rad))
     y2 = y1-int(length*math.sin(rad))
-    x4 = 1478
+    x4 = 1920
     y4 = 1185
     x3 = x4-int(length*math.cos(rad))
     y3 = y4-int(length*math.sin(rad))
@@ -158,15 +158,16 @@ def measure_center(lane):
     # it's 0.1524 cm to px
     # car is 55 in across, lane is 96 in.
     # this gives up 41/2 = 20.5 in to be centered
+    # center is 468 
     m_per_pix = 0.001524
-    x_distance_centered = 200 * (20.5/12) # centered if 20.5 in away
+    x_distance_centered = 468 # centered if 20.5 in away
     lane_width_m = 2.4384
-
     right_lane = lane
+
     if right_lane != None:
     	right_lane = filter(lambda p: 800-p[1]<10, right_lane)
     	right_lane = sorted(right_lane, key = lambda p: p[0])
-
+    
     if right_lane != None and len(right_lane) > 0: # we have our lane
         right_x = right_lane[0][0]
 	# negative deviation if car is right of center
@@ -187,8 +188,8 @@ def listener():
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
     rospy.init_node('right_lane_detection', anonymous=True)
-    rate = rospy.Rate(12) # 12hz - camera runs at 12 fps. Increasing this might be good
-    rospy.Subscriber("camera_fr/camera_fr/image_raw",Image, callback)
+    rate = rospy.Rate(24) # 12hz - camera runs at 12 fps. Increasing this might be good
+    rospy.Subscriber("camera_fl/camera_fl/image_raw",Image, callback)
     while not rospy.is_shutdown():
         rate.sleep()
 
