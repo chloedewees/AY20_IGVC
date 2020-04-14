@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+
+  <arg name="identifier" value="controller_tuning" />
+  <arg name="topics" value="/pacmod/parsed_tx/vehicle_speed /pacmod/parsed_tx/accel_rpt /pacmod/parsed_tx/brake_rpt /pacmod/parsed_tx/steer_rpt" />
+
+  <node name="record" pkg="rosbag" type="record" name="$(arg identifier)" args="record -o $(arg topics)" />
+
+</launch>
