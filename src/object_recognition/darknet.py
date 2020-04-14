@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 from ctypes import *
 import rospy
 from sensor_msgs.msg import Image
@@ -12,8 +11,11 @@ from cv_bridge import CvBridge, CvBridgeError
 
 net = None
 meta = None
+obj_array = VisualObjectArray()
 pub_state = UInt16MultiArray()
-object_list = UInt16MultiArray()
+pub_state.data = []
+pub = rospy.Publisher('detection_status',UInt16MultiArray,queue_size=1)
+objects_pub = rospy.Publisher('/visual_objects', VisualObjectArray, queue_size=1)
 
 def sample(probs):
     s = sum(probs)
@@ -138,7 +140,6 @@ def classify(net, meta, im):
     return res
 
 def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45):
-    global pub_state, object_list
     im = load_image(image, 0, 0)
     num = c_int(0)
     pnum = pointer(num)
@@ -148,21 +149,14 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45):
     if (nms): do_nms_obj(dets, num, meta.classes, nms);
 
     res = []
-    objects = []
     for j in range(num):
         for i in range(meta.classes):
             if dets[j].prob[i] > 0:
                 b = dets[j].bbox
                 res.append((meta.names[i], dets[j].prob[i], (b.x, b.y, b.w, b.h)))
                 if meta.names[i] == "stop sign":
-                    #print(b.w*b.h)
-                    pub_state.data = [b.w * b.h]
-                    #print (pub_state.data)
-                    objects.append(0)
-                if meta.names[i] == "persom":
-                    objects.append(1)
-        
-    object_list.data = objects
+                    pub_state.data.append(b.w * b.h)
+                    obj_array.append([0, b.x, b.y, b.w * b.h])
     res = sorted(res, key=lambda x: -x[1])
     free_image(im)
     free_detections(dets, num)
@@ -188,21 +182,18 @@ def listener():
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
     rospy.init_node('sign_detection', anonymous=True)
-    class_pub = rospy.Publisher('/visual_objects', UInt16MultiArray, queue_size=1)
-    pub = rospy.Publisher('detection_status',UInt16MultiArray, queue_size=1)
+    rate = rospy.Rate(30) # 30hz
     topic = "camera_fm/camera_fm/image_raw"
     rospy.Subscriber(topic, Image, callback)
-    
-    rate = rospy.Rate(3) # 3hz
     while not rospy.is_shutdown():
         print(pub_state)
-        class_pub.publish(object_list)
         pub.publish(pub_state)
+        objects_pub.publish( )
         rate.sleep()
         
 if __name__ == "__main__":
-    net = load_net("/home/user1/code/IGVC/src/AY20_IGVC/src/object_recognition/darknet_test/cfg/yolov3.cfg", "/home/user1/code/IGVC/src/AY20_IGVC/src/object_recognition/darknet_test/yolov3.weights", 0)
-    meta = load_meta("/home/user1/code/IGVC/src/AY20_IGVC/src/object_recognition/darknet_test/cfg/coco.data")
+    net = load_net("/home/user1/catkin_ws/src/get_hsv/darknet_test/cfg/yolov3.cfg", "/home/user1/catkin_ws/src/get_hsv/darknet_test/yolov3.weights", 0)
+    meta = load_meta("/home/user1/catkin_ws/src/get_hsv/darknet_test/cfg/coco.data")
     #r = detect(net, meta, "data/dog.jpg")
     #print r
     try:
