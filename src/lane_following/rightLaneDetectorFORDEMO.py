@@ -19,7 +19,6 @@ cv_image = np.zeros((imgWidth, imgHeight,3), np.uint8)
 res = np.zeros((imgWidth, imgHeight,3), np.uint8)
 image_size = (imgWidth, imgHeight)
 numSectors = 4
-state = [0] * (numSectors**2)
 
 # initialize line structs
 global right
@@ -32,6 +31,31 @@ sal=0
 sah=20
 val=235
 vah=255
+
+#Constants
+in2mm=25.4
+mm2in= 1.0/in2mm
+in2m= in2mm/1000.0
+lbf2N=4.448
+N2lbf= 1.0/lbf2N
+kg2lbs=2.205
+lbs2kg=1.0/kg2lbs
+rpm2rad= 2.0*math.pi/60.0 #rpm to rad/s
+m2miles= 2.23694 #m/s to mph
+miles2m= 1.0/m2miles  #mph to m/s
+phi = 1.618 #Golden Ratio
+g = 9.806 #Acc due to gravity in m/s
+
+prevTime = 0
+
+eDesired = 0.0
+prev_e = 0.0
+eDot = 0.0
+eDotDesired = 0.0
+kP1 = 0.5
+kD1 = 0.25
+v=5*miles2m
+omega = 0
 
 HSVLOW=np.array([hul,sal,val])
 HSVHIGH=np.array([huh,sah,vah])
@@ -70,7 +94,6 @@ def unwarp_lane(img):
     cv2.line(undist_orig, (x3,y3), (x4, y4), [255,0,0], 5)
 
     img = bridge.cv2_to_imgmsg(undist_orig,'bgr8')
-    pub_image_seek.publish(img)
 
     src = np.float32([(x1,y1),(x2,y2),(x3,y3),(x4,y4)])
 
@@ -100,13 +123,38 @@ def find_lane(polyArray, contourArray, image):
 
     return lane # returns the polygon x,y coordinates of the right lane (if it exists)
 
+def steeringAngleCalculator(x,img):
+    global prev_e, eDot, omega, imgWidth, imgHeight, prevTime
+
+    e = x
+    currentTime = rospy.get_time() 
+    dt = currentTime - prevTime
+    eDot = (e - prev_e)/dt
+    omega= (eDesired-e)*kP1 + (eDotDesired - eDot)*kD1 # 31deg or 0.54rad is max steering angle
+    prev_e = e
+    prevTime = currentTime
+
+    pac_cmd = omega * 20.36
+    if pac_cmd < -10.994:
+        pac_cmd = -10.994
+    elif pac_cmd > 10.994:
+        pac_cmd = 10.994
+
+    rad = math.pi/2 - (pac_cmd/20.36) # angle of the wheels
+    length = 400
+    x1 = imgWidth/2
+    y1 = imgHeight/2
+    x2 = x1-int(length*math.cos(rad))
+    y2 = y1-int(length*math.sin(rad))
+    cv2.line(img, (x1,y1), (x2, y2), [0,0,255], 10)
+    img = bridge.cv2_to_imgmsg(img,'bgr8')
+    pub_image_seek.publish(img)
+
 def callback(data):
     global cv_image
     global res
-    global state
     boxPolyArray = []
     contourArray = []
-    state = [0] * (numSectors**2)
     cv_image_orig = bridge.imgmsg_to_cv2(data, desired_encoding="bgr8")
     cv_image = cv_image_orig[:]
     cv_image=cv2.GaussianBlur(cv_image,(5,5),0)
@@ -145,7 +193,9 @@ def callback(data):
     # Now use our polygons to find lanes
     lane = find_lane(boxPolyArray, contourArray, cv_image_top)
     # and measure how far away we are from the center
-    measure_center(lane)
+    dev = measure_center(lane)
+    # then (for demo purposes) calculate the steering angle
+    steeringAngleCalculator(dev,cv_image)
 
     final_img = bridge.cv2_to_imgmsg(cv_image_top,'bgr8')
     pub_image_top_down.publish(final_img)
