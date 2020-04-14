@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy, sys
-from std_msgs.msg import Int16, Int8, Float32
+from std_msgs.msg import Int16, Int8, Float64
 from pacmod_msgs.msg import PacmodCmd
 
 brake_cmd = PacmodCmd()
@@ -16,15 +16,15 @@ F = [150.0, 200.0, 250.0]
 VF = [200.0, 250.0]
 
 deltaST = [1.0, 2.0]
-deltaVS = [1.0, 2.0, 5.0]
-deltaS = [2.0, 5.0, 10.0]
-deltaF = [5.0, 10.0, 15.0]
-deltaVF = [15.0, 20.0]
+deltaVS = [1.0, 2.0, 8.0]
+deltaS = [2.0, 8.0, 15.0]
+deltaF = [8.0, 15.0, 20.0]
+deltaVF = [20.0, 30.0]
 
 NOSPEED = 0.0
-QUARTERSPEED = 1.25
-HALFSPEED = 2.5
-FULLSPEED = 5.0
+QUARTERSPEED = 0.5588
+HALFSPEED = 1.1176
+FULLSPEED = 2.2352
 
 membership = [0.0, 0.0, 0.0, 0.0, 0.0]
 deltaMembership = [0.0, 0.0, 0.0, 0.0, 0.0]
@@ -74,7 +74,7 @@ def whiteLineSpeedController():
     global speedOutput, yDist, brake_cmd, throttle_cmd
     rospy.init_node('whiteLineBreakController', anonymous=True)
     throttle_pub = rospy.Publisher('pacmod/as_rx/accel_cmd', PacmodCmd, queue_size = 10)
-    speed_pub = rospy.Publisher('/speed_applied', Float32, queue_size=10)
+    speed_pub = rospy.Publisher('/speed_applied', Float64, queue_size=10)
     rospy.Subscriber('/selfdrive/state', Int8, state_callback)
     rospy.Subscriber('/line_distance', Int16, callback)   
     
