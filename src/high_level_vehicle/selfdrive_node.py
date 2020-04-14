@@ -109,9 +109,14 @@ def cnn_callback(msg):
     for obj in msg.objects:
         objects.append((obj.type, obj.xloc, obj.yloc, obj.area))
     obj_dict = {}
-    visual_objects = objects    
+    visual_objects = objects
+    
+def stop_callback(msg):
+    global sd_state:
+    if msg.data == 2:
+        sd_state = 2
 
-### Primary Arbitrator that determines when to take certain actions by changing states ###   
+### Primary Arbitrator that daetermines when to take certain actions by changing states ###   
 def decide_state(state, objects):
     if 0 in objects:
         return 11
@@ -153,6 +158,7 @@ if __name__ == '__main__':
     rospy.Subscriber('/selfdrive/user_input', Int8, user_input_callback)
     rospy.Subscriber('/pacmod/parsed_tx/shift_rpt', SystemRptInt, shift_rpt_callback)
     rospy.Subscriber('/visual_objects', VisualObjectArray, cnn_callback)
+    rospy.Subscriber('/stopped_state', int8, stopCallback)
     
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
