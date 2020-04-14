@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import UInt16MultiArray, Int8
+from std_msgs.msg import UInt16MultiArray, Int8, Float64
 from pacmod_msgs.msg import PacmodCmd
 speed_to_go = 5.0
 state = 0
@@ -17,9 +17,9 @@ deltaS = [100.0, 200.0, 300.0]
 deltaF = [200.0, 300.0, 500.0]
 deltaVF = [300.0,   500.0, 1000.0]
 NOSPEED = 0.0
-QUARTERSPEED = 1.25
-HALFSPEED = 2.5
-FULLSPEED = 5.0
+QUARTERSPEED = 0.5588
+HALFSPEED = 1.1176
+FULLSPEED = 2.2352
 
 membership = [0.0, 0.0, 0.0, 0.0, 0.0]
 deltaMembership = [0.0, 0.0, 0.0, 0.0, 0.0]
@@ -67,7 +67,7 @@ def callback(data):
 def stopSignSpeedController():
     global breakOutput, area, speed_to_go
     rospy.init_node('stopSignBreakController', anonymous=True)
-    speed_pub = rospy.Publisher('\stop_speed', Int8, queue_size=10)
+    speed_pub = rospy.Publisher('/stop_speed', Float64, queue_size=10)
     throttle_pub = rospy.Publisher('pacmod/as_rx/accel_cmd', PacmodCmd, queue_size = 10)
     rospy.Subscriber('/selfdrive/state', Int8, state_callback)
     rospy.Subscriber("detection_status", UInt16MultiArray, callback)   

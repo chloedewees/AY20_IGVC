@@ -6,8 +6,10 @@ from pacmod_msgs.msg import PacmodCmd
 state = 0
 #Target Values
 currentVelocity = 0.0
-previousVelocity = 0.0
+previousVelocity = 0.05
 targetVelocity = 2.2352 #5MPH in m/s
+signVelocity = 2.2352
+whiteLineVelocity = 2.2352
 error = 0.0
 integralError = 0.0
 derivativeError = 0.0
@@ -34,13 +36,22 @@ def state_callback(msg):
 def speedCallBack(msg):
     global currentVelocity
     currentVelocity = msg.data
+    
+def whiteLineCallback(msg):
+    global whiteLineVelocity
+    whiteLineVelocity = msg.data
+    
+def signCallback(msg):
+    global signVelocity
+    signVelocity = msg.data
 
 
 def velController():
-    global currentVelocity, previousVelocity, targetVelocity, error, integralError, derivativeError, previousError, previousIntegralError, Kp, Ki, Kd, throttle, prevTime, time, controlMax, controlMin, MPH2MPS, integralMax
+    global currentVelocity, previousVelocity, targetVelocity, whiteLineVelocity, signVelocity, error, integralError, derivativeError, previousError, previousIntegralError, Kp, Ki, Kd, throttle, prevTime, time, controlMax, controlMin, MPH2MPS, integralMax
     prevTime = time
     time = rospy.get_time()
     dt = time-prevTime
+    targetVelocity = (whiteLineVelocity + signVelocity)/2
     error = targetVelocity - currentVelocity
     previousIntegralError = integralError
     integralError = (error * (dt) + integralError)
@@ -79,6 +90,8 @@ def constVelocity():
     accel_pub = rospy.Publisher('pacmod/as_rx/accel_cmd', PacmodCmd, queue_size = 10)
     brake_pub = rospy.Publisher('/pacmod/as_rx/brake_cmd', PacmodCmd, queue_size = 10)
     rospy.Subscriber('/pacmod/as_tx/vehicle_speed', Float64, speedCallBack)
+    rospy.Sublisher('/speed_applied', Float64, whiteLineCallBack)
+    rospy.Sublisher('/stop_speed', Float64, whiteLineCallBack)
     rospy.Subscriber('/selfdrive/state', Int8, state_callback)
     accel = PacmodCmd()
     accel.f64_cmd = 0
@@ -104,4 +117,3 @@ if __name__ == '__main__':
         constVelocity()
     except rospy.ROSInterruptException:
         pass    
-
