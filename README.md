@@ -7,14 +7,14 @@ Ubuntu 16.04
 
 Team Lead: Christopher Little - Christopher.little@westpoint.edu
 
-##Getting ROS to recognize a new workspace (for example, catkin_ws):
+## Getting ROS to recognize a new workspace (for example, catkin_ws):
 >In terminal, run 'sudo gedit ~/.bashrc'
 
 >At the bottom of the file, add the line 'source [YOUR PATH]/catkin_ws/devel/setup.bash'
 
 >Save and exit, then new terminal windows
 
-##Getting darknet to run on a ROS machine:
+## Getting darknet to run on a ROS machine:
 
 >In terminal, run 'sudo gedit /etc/ld.so.conf.d/darknetLib.conf'
 
