@@ -19,6 +19,13 @@ Team Lead: Christopher Little - Christopher.little@westpoint.edu
 * Save and exit, then run 'sudo ldconfig' in the terminal.
 * Now new terminal windows will work with it.
 
+## Running whiteline controller:
+* In terminal, run 'roscore'
+* In terminal, run 'whiteline_detector.py'
+* In terminal, run 'whiteLineController.py'
+* In terminal, run appropriate rosbag (I suggest IGVCStopsSign.bag) 'rosbag play bagfile'
+* In terminal, run 'rostopic echo /speed_applied'
+
 ## Launching the main package:
 
 * Run 'roslaunch AY20_IGVC gem_e2.launch
