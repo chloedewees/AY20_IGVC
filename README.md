@@ -31,6 +31,12 @@ Team Lead: Christopher Little - Christopher.little@westpoint.edu
 * In terminal, run 'darknet.py'
 * In terminal, run 'signController.py'
 * In terminal, run appropriate rosbag (I suggest IGVCStopsSign.bag) 'rosbag play bagfile'
+* In terminal, run 'rostopic echo /detection_status'
+
+## Final Stop Sign Detection Stuff:
+* Follow above insrtuctions for whiteline and darknet controller
+* In terminal, run 'constVelocity.py'
+* The vehicle should now send brake commands to pacmod as is appropriate
 
 ## Launching the main package:
 
