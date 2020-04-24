@@ -1,3 +1,8 @@
+"""Most of this code was taken from the darknet github, but we made certain changes
+to make this useful as a Ros node"""
+
+
+
 #!/usr/bin/env python
 from ctypes import *
 import rospy
@@ -147,7 +152,7 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45):
     dets = get_network_boxes(net, im.w, im.h, thresh, hier_thresh, None, 0, pnum)
     num = pnum[0]
     if (nms): do_nms_obj(dets, num, meta.classes, nms);
-
+    ### The below loop collects yoloV3's detections and formats it for publication
     res = []
     for j in range(num):
         for i in range(meta.classes):
@@ -161,7 +166,8 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45):
     free_image(im)
     free_detections(dets, num)
     return res
-    
+
+### This our callback, it formats computer vision images to a .jpg format 
 def callback(data):
     global pub_state
     try:
@@ -176,11 +182,6 @@ def callback(data):
     
 def listener():
     global pub_state
-    # In ROS, nodes are uniquely named. If two nodes with the same
-    # name are launched, the previous one is kicked off. The
-    # anonymous=True flag means that rospy will choose a unique
-    # name for our 'listener' node so that multiple listeners can
-    # run simultaneously.
     rospy.init_node('sign_detection', anonymous=True)
     rate = rospy.Rate(30) # 30hz
     topic = "camera_fm/camera_fm/image_raw"
@@ -192,6 +193,8 @@ def listener():
         rate.sleep()
         
 if __name__ == "__main__":
+    ## The pathing info here is important if you guys change your file organiztion change this stuff and the
+    ## paths in the coco data file
     net = load_net("/home/user1/catkin_ws/src/get_hsv/darknet_test/cfg/yolov3.cfg", "/home/user1/catkin_ws/src/get_hsv/darknet_test/yolov3.weights", 0)
     meta = load_meta("/home/user1/catkin_ws/src/get_hsv/darknet_test/cfg/coco.data")
     #r = detect(net, meta, "data/dog.jpg")
