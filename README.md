@@ -26,6 +26,12 @@ Team Lead: Christopher Little - Christopher.little@westpoint.edu
 * In terminal, run appropriate rosbag (I suggest IGVCStopsSign.bag) 'rosbag play bagfile'
 * In terminal, run 'rostopic echo /speed_applied'
 
+## Running darknet controller:
+* In terminal, run 'roscore'
+* In terminal, run 'darknet.py'
+* In terminal, run 'signController.py'
+* In terminal, run appropriate rosbag (I suggest IGVCStopsSign.bag) 'rosbag play bagfile'
+
 ## Launching the main package:
 
 * Run 'roslaunch AY20_IGVC gem_e2.launch
