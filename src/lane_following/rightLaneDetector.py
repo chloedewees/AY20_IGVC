@@ -18,8 +18,6 @@ imgHeight = 1440
 cv_image = np.zeros((imgWidth, imgHeight,3), np.uint8)
 res = np.zeros((imgWidth, imgHeight,3), np.uint8)
 image_size = (imgWidth, imgHeight)
-numSectors = 4
-state = [0] * (numSectors**2)
 
 # initialize line structs
 global right
@@ -39,16 +37,6 @@ HSVHIGH=np.array([huh,sah,vah])
 pub = rospy.Publisher('/y_distance',Float32,queue_size=1)
 pub_image_top_down = rospy.Publisher('/lane_detection_image_top_down',Image,queue_size=1)
 pub_image_seek = rospy.Publisher('/lane_detection_image_seek',Image,queue_size=1)
-
-#set up sector limits
-wInt = int(1536/numSectors)
-hInt = int(720/numSectors)
-polyList = []
-
-for y in range (0,numSectors):
-    for x in range(0,numSectors):
-        newPoly = Polygon([(x*wInt,y*hInt),((x+1)*wInt,y*hInt),((x+1)*wInt,(y+1)*hInt),(x*wInt,(y+1)*hInt)])
-        polyList.append(newPoly)
 
 def unwarp_lane(img):
     # this transforms the input from the right camera to a more straight-ahead view of the right lane
@@ -103,10 +91,8 @@ def find_lane(polyArray, contourArray, image):
 def callback(data):
     global cv_image
     global res
-    global state
     boxPolyArray = []
     contourArray = []
-    state = [0] * (numSectors**2)
     cv_image_orig = bridge.imgmsg_to_cv2(data, desired_encoding="bgr8")
     cv_image = cv_image_orig[:]
     cv_image=cv2.GaussianBlur(cv_image,(5,5),0)
