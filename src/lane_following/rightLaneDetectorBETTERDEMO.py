@@ -51,8 +51,8 @@ eDesired = 0.0
 prev_e = 0.0
 eDot = 0.0
 eDotDesired = 0.0
-kP1 = 0.5
-kD1 = 0.25
+kP1 = 1.5
+kD1 = 0.3
 v=5*miles2m
 omega = 0
 
