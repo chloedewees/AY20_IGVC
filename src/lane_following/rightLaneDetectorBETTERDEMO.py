@@ -143,7 +143,7 @@ def callback(data):
 			# find points that fit along the contours to create polygons
         epsilon = 0.1*cv2.arcLength(contour,True)
         polyPoints = np.int0([val for sublist in contour for val in sublist])
-        if(w*h >= 500): # ignore tiny bounding boxes
+        if(w*h >= cv_image_top): # ignore tiny bounding boxes
             cv2.drawContours(cv_image_top, contour, -1, (0,255,0), 3)
             cv2.drawContours(res, contour, -1, (0,255,0), 3)
             #boxConvert = map(lambda p: tuple(p), approx)
@@ -154,7 +154,7 @@ def callback(data):
     # Now use our polygons to find lanes
     lane = find_lane(boxPolyArray, contourArray, cv_image_top)
     # and measure how far away we are from the center
-    dev = measure_center(lane)
+    dev, cv_image_top = measure_center(lane, cv_image_top)
     # then (for demo purposes) calculate the steering angle
     cv_image_top = steeringAngleCalculator(dev,cv_image_top)
 
@@ -173,37 +173,91 @@ def callback(data):
     fontColor              = (255,0,0)
     lineType               = 2
     cv2.putText(cv_image_top,text_overlay, bottomLeftCornerOfText, font, fontScale,fontColor,lineType)
+		# draw dashed line
+    pt1=[342,0]
+    pt2=[342,800]
+    color=[0,0,255]
+    gap=20
+    dist =((pt1[0]-pt2[0])**2 (pt1[1]-pt2[1])**2)**.5
+    pts= []
+    for i in  np.arange(0,dist,gap):
+			r=i/dist
+			x=int((pt1[0]*(1-r) pt2[0]*r) .5)
+			y=int((pt1[1]*(1-r) pt2[1]*r) .5)
+			p = (x,y)
+			pts.append(p)
+
+    s=pts[0]
+    e=pts[0]
+    i=0
+    for p in pts:
+				s=e
+				e=p
+				if i%2==1:
+					  cv2.line(cv_image_top,s,e,color,thickness)
+				i =1
 
     final_img = bridge.cv2_to_imgmsg(cv_image_top,'bgr8')
     pub_image_top_down.publish(final_img)
     cv2.waitKey(1)
 
-def measure_center(lane):
-    # On undistorted image, 1 ft = 200px - 0.06 in / px
-    # Distorted maps 800 px to 764
-    # 1ft = 0.3048m
-    # it's 0.1524 cm to px
-    # car is 55 in across, lane is 96 in.
-    # this gives up 41/2 = 20.5 in to be centered
-    m_per_pix = 0.001524
-    x_distance_centered = 200 * (20.5/12) # centered if 20.5 in away
-    lane_width_m = 2.4384
+def measure_center(lane, image):
+		# On undistorted image, 1 ft = 200px - 0.06 in / px
+		# Distorted maps 800 px to 764
+		# 1ft = 0.3048m
+		# it's 0.1524 cm to px
+		# car is 55 in across, lane is 96 in.
+		# this gives up 41/2 = 20.5 in to be centered
 
-    right_lane = lane
-    if right_lane != None:
-    	right_lane = filter(lambda p: 800-p[1]<10, right_lane)
-    	right_lane = sorted(right_lane, key = lambda p: p[0])
+		m_per_pix = 0.001524
+		x_distance_centered = 200 * (20.5/12) # centered if 20.5 in away
+		lane_width_m = 2.4384
 
-    if right_lane != None and len(right_lane) > 0: # we have our lane
-        right_x = right_lane[0][0]
-	# negative deviation if car is right of center
-        deviation_from_center = -(x_distance_centered - right_x)*m_per_pix
-    else: # no lanes, we screwed
-        deviation_from_center = -99
-    # return lane width and camera's position
-    rospy.loginfo(deviation_from_center)
-    pub.publish(float(deviation_from_center))
-    return deviation_from_center
+		right_lane = lane
+		if right_lane != None:
+			lane_vector = np.array([right_lane]) #convert to numpy array for line fitting
+
+			# Invert x and y so that it fits to vertical lines (see what happens if you switch them)
+			# uses a quadratic fit to help with curves as well
+			x,y = list(zip(*right_lane))
+			myCoeffs = np.polyfit(y,x,2)
+			x = [myCoeffs[2] + myCoeffs[1]*y1 + myCoeffs[0]*y1**2 for y1 in y]
+			coords = np.int32([np.array(list(zip(x,y)))]) # but we want x,y plotted as such
+			cv2.polylines(image,coords, False, 0, thickness=3)
+			intersection = False # did we find a more accurate point?
+			distance = -1
+			for y in range(-800,1601): # find perp slope that goes through (0,800)
+				perp_slope = -1/(2*myCoeffs[0]*y+myCoeffs[1]) # we are still inverting x,y
+				x = myCoeffs[2] + myCoeffs[1]*y + myCoeffs[0]*y**2
+				b = -perp_slope*y+x
+				if(abs(perp_slope*800+b) <= 15): # have we found our true distance to the line?
+					intersection = True
+					truex,truey = x,y
+					distance = math.sqrt(x**2+(y-800)**2)
+					cv2.line(image, (0,800), (int(truex),int(truey)), [0,0,255], 3)
+					break
+			
+			if intersection:
+				right_x = distance - 30 # subtract 30 because we want lane tape, not the fit line
+				print(distance)
+				deviation_from_center = -(x_distance_centered - right_x)*m_per_pix 		# negative deviation if car is right of center
+			else: # if we can't find the actual x, just default to bottom of image
+				right_lane = filter(lambda p: 800-p[1]<20, right_lane)
+				right_lane = sorted(right_lane, key = lambda p: p[0])
+				if right_lane != None:
+					right_x = right_lane[0][0]
+					deviation_from_center = -(x_distance_centered - right_x)*m_per_pix # negative deviation if car is right of center
+				else: # no lanes, we screwed
+					deviation_from_center = -99
+
+		else: # no lanes, we screwed
+			deviation_from_center = -99
+
+		cv2.line(image, (342,800), (342,0), [0,0,255], 3)
+		# return lane width and camera's position
+		rospy.loginfo(deviation_from_center)
+		pub.publish(float(deviation_from_center))
+		return deviation_from_center, image
 
 def steeringAngleCalculator(x,img):
     global prev_e, eDot, omega, imgWidth, imgHeight, prevTime
@@ -228,9 +282,9 @@ def steeringAngleCalculator(x,img):
 
     text_overlay = ""
     if deg < 0:
-      text_overlay = str(abs(deg)) +" deg left"
+      text_overlay = str(abs(deg)) +"deg left"
     else:
-      text_overlay = str(deg) +" deg right"
+      text_overlay = str(deg) +"deg right"
 
     
     font                   = cv2.FONT_HERSHEY_SIMPLEX
