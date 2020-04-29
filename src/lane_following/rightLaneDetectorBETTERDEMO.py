@@ -143,7 +143,7 @@ def callback(data):
 			# find points that fit along the contours to create polygons
         epsilon = 0.1*cv2.arcLength(contour,True)
         polyPoints = np.int0([val for sublist in contour for val in sublist])
-        if(w*h >= cv_image_top): # ignore tiny bounding boxes
+        if(w*h >= 9000): # ignore tiny bounding boxes
             cv2.drawContours(cv_image_top, contour, -1, (0,255,0), 3)
             cv2.drawContours(res, contour, -1, (0,255,0), 3)
             #boxConvert = map(lambda p: tuple(p), approx)
@@ -173,29 +173,12 @@ def callback(data):
     fontColor              = (255,0,0)
     lineType               = 2
     cv2.putText(cv_image_top,text_overlay, bottomLeftCornerOfText, font, fontScale,fontColor,lineType)
-		# draw dashed line
-    pt1=[342,0]
-    pt2=[342,800]
-    color=[0,0,255]
-    gap=20
-    dist =((pt1[0]-pt2[0])**2 (pt1[1]-pt2[1])**2)**.5
-    pts= []
-    for i in  np.arange(0,dist,gap):
-			r=i/dist
-			x=int((pt1[0]*(1-r) pt2[0]*r) .5)
-			y=int((pt1[1]*(1-r) pt2[1]*r) .5)
-			p = (x,y)
-			pts.append(p)
 
-    s=pts[0]
-    e=pts[0]
-    i=0
-    for p in pts:
-				s=e
-				e=p
-				if i%2==1:
-					  cv2.line(cv_image_top,s,e,color,thickness)
-				i =1
+		# draw dashed line
+    color=[255,0,0]
+    for y in  np.arange(0, 800):
+			if y % 40 < 30:
+				cv2.line(cv_image_top,(340,y),(344,y),color,1)
 
     final_img = bridge.cv2_to_imgmsg(cv_image_top,'bgr8')
     pub_image_top_down.publish(final_img)
@@ -253,7 +236,6 @@ def measure_center(lane, image):
 		else: # no lanes, we screwed
 			deviation_from_center = -99
 
-		cv2.line(image, (342,800), (342,0), [0,0,255], 3)
 		# return lane width and camera's position
 		rospy.loginfo(deviation_from_center)
 		pub.publish(float(deviation_from_center))
