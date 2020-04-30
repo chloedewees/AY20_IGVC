@@ -66,8 +66,9 @@ def enable_callback(msg):
     enabled = msg.data   
 
 def estop_callback(msg):
-    global estop
+    global estop, last_estop_tm
     estop = msg.data
+    last_estop_tm = rospy.get_time()
     
 def speed_callback(msg):
     global speed
@@ -89,8 +90,11 @@ def selfdrive_sig_callback(msg):
 
 
 if __name__ == '__main__':
-    enabled, estop, speed, mode, selfdrive_status, selfdrive_sig_tm = False, False, 0.0, 0, 0, 0
     rospy.init_node('vehicle_manager_hl', anonymous=True)
+    
+    enabled, estop, speed, mode, selfdrive_status, selfdrive_sig_tm = False, False, 0.0, 0, 0, 0
+    last_estop_tm = rospy.get_time()   
+    
     mode_pub = rospy.Publisher('/gem/operation_mode', Int8, queue_size=10)
     enable_pub = rospy.Publisher('/pacmod/as_rx/enable', Bool, queue_size=10)
     shift_pub = rospy.Publisher('/pacmod/as_rx/shift_cmd', PacmodCmd, queue_size=10)
@@ -108,8 +112,8 @@ if __name__ == '__main__':
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
     
-        if estop:
-            mode = 7    # send stop and shutdown signal
+        if estop or rospy.get_time()-last_estop_tm>0.5:
+            mode = 7    # send stop and shutdown signal if estop pressed or break in estop signal
             
         elif mode and not enabled:
             revert_to_manual('possible override detected')
