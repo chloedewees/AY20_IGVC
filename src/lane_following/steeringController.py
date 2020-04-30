@@ -30,8 +30,8 @@ eDesired = 0.0
 prev_e = 0.0
 eDot = 0.0
 eDotDesired = 0.0
-kP1 = 0.5
-kD1 = 0.25
+kP1 = 1.5
+kD1 = 0.3
 v=5*miles2m
 omega = 0
 
@@ -65,7 +65,7 @@ def SteeringController():
     rospy.Subscriber('/selfdrive/state', Int8, state_callback)
     rospy.Subscriber("/y_distance", Float32, steeringAngleCalculator)
 
-    steer_cmd.angular_velocity_limit = 10  # Adjust this!!
+    steer_cmd.angular_velocity_limit = 3.3  # Adjust this!!
 
     rate = rospy.Rate(12) #12hz
     while not rospy.is_shutdown():
