@@ -6,6 +6,7 @@ Python 2.7.12
 Ubuntu 16.04
 
 Team Lead: Christopher Little - Christopher.little@westpoint.edu
+
 Computer Vision: Will Anderson - will.c.anderson.mil@mail.mil
 
 ## Getting ROS to recognize a new workspace (for example, catkin_ws):
