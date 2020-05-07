@@ -20,11 +20,16 @@ Team Lead: Christopher Little - Christopher.little@westpoint.edu
 * Now new terminal windows will work with it.
 
 ## Running whiteline controller:
-* In terminal, run 'roscore'
+* In terminal, run 'fm_camera.launch'
 * In terminal, run 'whiteline_detector.py'
 * In terminal, run 'whiteLineController.py'
 * In terminal, run appropriate rosbag (I suggest IGVCStopsSign.bag) 'rosbag play bagfile'
 * In terminal, run 'rostopic echo /speed_applied'
+
+## Running lane finder and following controller:
+* In terminal, run 'fr_camera.launch'
+* In terminal, run 'rightLaneDetector.py'
+* In terminal, run 'steeringController.py'
 
 ## Running darknet controller:
 * In terminal, run 'roscore'
